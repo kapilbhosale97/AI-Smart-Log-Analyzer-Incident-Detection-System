@@ -365,7 +365,7 @@ Contributions are welcome! Here's how to get started:
 
 ```bash
 # 1. Fork the repo and clone your fork
-git clone https://github.com/your-username/ai-log-analyzer.git
+git clone https://github.com/chirdekaran262/Log-analyzer-AI.git
 
 # 2. Create a feature branch
 git checkout -b feature/your-feature-name
