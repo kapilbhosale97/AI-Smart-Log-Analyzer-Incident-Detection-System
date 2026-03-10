@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # 🛡️ AI Log Analyzer
 
 > **Intelligent log analysis and incident detection powered by unsupervised machine learning and a deterministic rule engine — built with FastAPI.**
@@ -390,3 +391,6 @@ This project is licensed under the **MIT License**. See [LICENSE](LICENSE) for d
 <div align="center">
   Built with FastAPI · scikit-learn · Chart.js · Bootstrap 5
 </div>
+=======
+# AI-Smart-Log-Analyzer-Incident-Detection-System
+>>>>>>> 0c8ec761a7b83f397bb79b2e50f750bbd86cf5de
