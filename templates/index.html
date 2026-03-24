@@ -1,301 +1,366 @@
-<!DOCTYPE html>
-<html lang="en">
-
-<head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>AI Log Analyzer</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" />
-    <link
-        href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Syne:wght@400;700;800&display=swap"
-        rel="stylesheet" />
-    <style>
-        :root {
-            --bg: #060d1a;
-            --surface: #0d1b2e;
-            --border: rgba(99, 179, 237, 0.15);
-            --pink: #f472b6;
-            --cyan: #67e8f9;
-            --orange: #fb923c;
-            --text: #e2eaf4;
-            --muted: #64748b;
-        }
-
-        *,
-        *::before,
-        *::after {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-
-        body {
-            font-family: 'Syne', sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            overflow: hidden;
-        }
-
-        /* grid background */
-        body::before {
-            content: '';
-            position: fixed;
-            inset: 0;
-            background-image:
-                linear-gradient(rgba(103, 232, 249, 0.04) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(103, 232, 249, 0.04) 1px, transparent 1px);
-            background-size: 40px 40px;
-            pointer-events: none;
-        }
-
-        /* glowing orb */
-        body::after {
-            content: '';
-            position: fixed;
-            width: 600px;
-            height: 600px;
-            border-radius: 50%;
-            background: radial-gradient(circle, rgba(244, 114, 182, 0.08) 0%, transparent 70%);
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            pointer-events: none;
-        }
-
-        .card-wrap {
-            position: relative;
-            width: 520px;
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 20px;
-            padding: 48px 44px;
-            box-shadow: 0 24px 80px rgba(0, 0, 0, 0.6);
-            animation: fadeUp 0.6s ease both;
-        }
-
-        @keyframes fadeUp {
-            from {
-                opacity: 0;
-                transform: translateY(24px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .logo-row {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 8px;
-        }
-
-        .logo-icon {
-            width: 42px;
-            height: 42px;
-            background: linear-gradient(135deg, var(--pink), var(--orange));
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.2rem;
-            color: #fff;
-            flex-shrink: 0;
-        }
-
-        h1 {
-            font-size: 1.55rem;
-            font-weight: 800;
-            letter-spacing: -0.02em;
-            line-height: 1;
-        }
-
-        .subtitle {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.72rem;
-            color: var(--muted);
-            letter-spacing: 0.08em;
-            text-transform: uppercase;
-            margin-bottom: 36px;
-        }
-
-        .drop-zone {
-            border: 1.5px dashed rgba(103, 232, 249, 0.25);
-            border-radius: 14px;
-            padding: 36px 24px;
-            text-align: center;
-            cursor: pointer;
-            transition: border-color 0.2s, background 0.2s;
-            background: rgba(103, 232, 249, 0.02);
-            position: relative;
-        }
-
-        .drop-zone:hover,
-        .drop-zone.drag-over {
-            border-color: var(--cyan);
-            background: rgba(103, 232, 249, 0.05);
-        }
-
-        .drop-zone input[type="file"] {
-            position: absolute;
-            inset: 0;
-            opacity: 0;
-            cursor: pointer;
-            width: 100%;
-            height: 100%;
-        }
-
-        .drop-icon {
-            font-size: 2rem;
-            color: var(--cyan);
-            margin-bottom: 10px;
-            display: block;
-        }
-
-        .drop-label {
-            font-size: 0.9rem;
-            color: var(--text);
-            font-weight: 600;
-        }
-
-        .drop-hint {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.7rem;
-            color: var(--muted);
-            margin-top: 6px;
-        }
-
-        #file-name-display {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.75rem;
-            color: var(--cyan);
-            margin-top: 10px;
-            min-height: 18px;
-            text-align: center;
-        }
-
-        .btn-analyze {
-            margin-top: 24px;
-            width: 100%;
-            padding: 13px;
-            border: 0;
-            border-radius: 10px;
-            background: linear-gradient(90deg, var(--pink), var(--orange));
-            color: #fff;
-            font-family: 'Syne', sans-serif;
-            font-size: 0.95rem;
-            font-weight: 700;
-            letter-spacing: 0.02em;
-            cursor: pointer;
-            transition: opacity 0.2s, transform 0.1s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-        }
-
-        .btn-analyze:hover {
-            opacity: 0.88;
-        }
-
-        .btn-analyze:active {
-            transform: scale(0.98);
-        }
-
-        .btn-analyze:disabled {
-            opacity: 0.45;
-            cursor: not-allowed;
-        }
-
-        .footer-note {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.65rem;
-            color: var(--muted);
-            text-align: center;
-            margin-top: 24px;
-        }
-
-        .spinner {
-            display: none;
-            width: 16px;
-            height: 16px;
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            border-top-color: #fff;
-            border-radius: 50%;
-            animation: spin 0.7s linear infinite;
-        }
-
-        @keyframes spin {
-            to {
-                transform: rotate(360deg);
-            }
-        }
-    </style>
-</head>
-
-<body>
-    <div class="card-wrap">
-        <div class="logo-row">
-            <div class="logo-icon"><i class="bi bi-cpu"></i></div>
-            <h1>AI Log Analyzer</h1>
-        </div>
-        <p class="subtitle">Anomaly Detection &amp; Incident Response</p>
-
-        <form action="/analyze" method="post" enctype="multipart/form-data" id="upload-form">
-            <div class="drop-zone" id="drop-zone">
-                <input type="file" name="file" id="file-input" accept=".log,.txt,.out" required />
-                <i class="bi bi-file-earmark-code drop-icon"></i>
-                <div class="drop-label">Drop your log file here</div>
-                <div class="drop-hint">or click to browse &nbsp;·&nbsp; .log &nbsp;.txt &nbsp;.out</div>
-            </div>
-            <div id="file-name-display"></div>
-
-            <button type="submit" class="btn-analyze" id="submit-btn" disabled>
-                <span class="spinner" id="spinner"></span>
-                <i class="bi bi-search" id="search-icon"></i>
-                <span id="btn-label">Analyze Logs</span>
-            </button>
-        </form>
-
-        <p class="footer-note">Unsupervised ML · Rule Engine · Real-time Analysis</p>
-    </div>
-
-    <script>
-        const fileInput = document.getElementById('file-input');
-        const display = document.getElementById('file-name-display');
-        const submitBtn = document.getElementById('submit-btn');
-        const dropZone = document.getElementById('drop-zone');
-        const spinner = document.getElementById('spinner');
-        const searchIcon = document.getElementById('search-icon');
-        const btnLabel = document.getElementById('btn-label');
-
-        fileInput.addEventListener('change', () => {
-            const file = fileInput.files[0];
-            if (file) {
-                display.textContent = '?? ' + file.name;
-                submitBtn.disabled = false;
-            }
-        });
-
-        // Drag-and-drop visual feedback
-        dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
-        dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
-        dropZone.addEventListener('drop', () => dropZone.classList.remove('drag-over'));
-
-        document.getElementById('upload-form').addEventListener('submit', () => {
-            submitBtn.disabled = true;
-            spinner.style.display = 'block';
-            searchIcon.style.display = 'none';
-            btnLabel.textContent = 'Analyzing';
-        });
-    </script>
-</body>
-
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI Log Analyzer</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Syne:wght@400;700;800&display=swap"
+        rel="stylesheet" />
+    <style>
+        :root {
+            --bg: #060d1a;
+            --surface: #0d1b2e;
+            --border: rgba(99, 179, 237, 0.15);
+            --pink: #f472b6;
+            --cyan: #67e8f9;
+            --orange: #fb923c;
+            --text: #e2eaf4;
+            --muted: #64748b;
+        }
+
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Syne', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            padding: 20px;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image:
+                linear-gradient(0deg, rgba(99, 179, 237, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(103, 232, 249, 0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+            pointer-events: none;
+        }
+
+        .grid-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            max-width: 1000px;
+            position: relative;
+            z-index: 1;
+        }
+
+        @media (max-width: 768px) {
+            .grid-container {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+        }
+
+        .card-wrap {
+            position: relative;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 40px;
+            backdrop-filter: blur(10px);
+            animation: fadeUp 0.6s ease-out;
+        }
+
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .section-header i {
+            font-size: 18px;
+            color: var(--cyan);
+        }
+
+        .section-header h2 {
+            font-size: 16px;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .drop-zone {
+            border: 2px dashed var(--border);
+            border-radius: 12px;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 16px;
+        }
+
+        .drop-zone:hover,
+        .drop-zone.drag-over {
+            border-color: var(--cyan);
+            background: rgba(103, 232, 249, 0.05);
+        }
+
+        .drop-zone input[type="file"] {
+            display: none;
+        }
+
+        .drop-icon {
+            font-size: 32px;
+            margin-bottom: 12px;
+        }
+
+        .drop-label {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text);
+            display: block;
+        }
+
+        .drop-hint {
+            font-size: 12px;
+            color: var(--muted);
+            margin-top: 6px;
+        }
+
+        .path-input-group {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .path-input-group input {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 10px 12px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .path-input-group input:focus {
+            outline: none;
+            border-color: var(--cyan);
+            background: rgba(103, 232, 249, 0.05);
+        }
+
+        .path-input-group input::placeholder {
+            color: var(--muted);
+        }
+
+        .btn-analyze {
+            width: 100%;
+            padding: 11px 20px;
+            font-weight: 600;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            color: white;
+        }
+
+        .btn-upload {
+            background: linear-gradient(135deg, var(--pink), #ec4899);
+        }
+
+        .btn-upload:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(244, 114, 182, 0.3);
+        }
+
+        .btn-path {
+            background: linear-gradient(135deg, var(--cyan), #06b6d4);
+        }
+
+        .btn-path:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(103, 232, 249, 0.3);
+        }
+
+        .btn-analyze:active {
+            transform: translateY(0);
+        }
+
+        .btn-analyze:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        #file-name-display {
+            font-size: 12px;
+            color: var(--cyan);
+            margin-top: 8px;
+            min-height: 16px;
+            word-break: break-all;
+        }
+
+        .footer-note {
+            font-size: 11px;
+            color: var(--muted);
+            margin-top: 16px;
+            text-align: center;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="grid-container">
+        <!-- Upload Card -->
+        <div class="card-wrap">
+            <div class="section-header">
+                <i class="bi bi-cloud-arrow-up"></i>
+                <h2>Upload Log File</h2>
+            </div>
+
+            <form action="/analyze" method="post" enctype="multipart/form-data" id="upload-form">
+                <div class="drop-zone" id="drop-zone">
+                    <div class="drop-icon">??</div>
+                    <span class="drop-label">Click or drag log file here</span>
+                    <span class="drop-hint">Supports .log, .txt, .out files</span>
+                    <input type="file" id="file-input" name="file" accept=".log,.txt,.out" />
+                </div>
+
+                <div id="file-name-display"></div>
+
+                <button type="submit" id="submit-btn" class="btn-analyze btn-upload" disabled>
+                    <i class="bi bi-search"></i>
+                    <span id="btn-label">Choose file to analyze</span>
+                </button>
+
+                <div id="spinner" class="spinner" style="display: none; margin: 0 auto; margin-top: 12px;"></div>
+            </form>
+
+            <p class="footer-note">Manual upload � Drag & drop supported</p>
+        </div>
+
+        <!-- Path Analysis Card -->
+        <div class="card-wrap">
+            <div class="section-header">
+                <i class="bi bi-folder-open"></i>
+                <h2>Analyze from Path</h2>
+            </div>
+
+            <form id="path-form">
+                <div class="path-input-group">
+                    <input type="text" id="path-input" placeholder="Enter folder or file path..."
+                        value="C:\Users\KARAN\OneDrive\Desktop\ai-log-analyzer\logs" />
+                </div>
+
+                <button type="submit" class="btn-analyze btn-path">
+                    <i class="bi bi-search"></i>
+                    <span>Analyze Folder/File</span>
+                </button>
+
+                <div id="path-spinner" class="spinner" style="display: none; margin: 0 auto; margin-top: 12px;"></div>
+            </form>
+
+            <p class="footer-note">Automatic � No upload needed</p>
+        </div>
+    </div>
+
+    <script>
+        // ===== FILE UPLOAD =====
+        const fileInput = document.getElementById('file-input');
+        const display = document.getElementById('file-name-display');
+        const submitBtn = document.getElementById('submit-btn');
+        const dropZone = document.getElementById('drop-zone');
+        const spinner = document.getElementById('spinner');
+        const btnLabel = document.getElementById('btn-label');
+
+        fileInput.addEventListener('change', () => {
+            if (fileInput.files.length > 0) {
+                display.textContent = '?? ' + fileInput.files[0].name;
+                submitBtn.disabled = false;
+                btnLabel.textContent = 'Analyze';
+            } else {
+                display.textContent = '';
+                submitBtn.disabled = true;
+                btnLabel.textContent = 'Choose file to analyze';
+            }
+        });
+
+        // Drag-and-drop
+        dropZone.addEventListener('dragover', e => {
+            e.preventDefault();
+            dropZone.classList.add('drag-over');
+        });
+        dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+        dropZone.addEventListener('drop', () => dropZone.classList.remove('drag-over'));
+
+        document.getElementById('upload-form').addEventListener('submit', () => {
+            submitBtn.disabled = true;
+            spinner.style.display = 'block';
+            btnLabel.textContent = 'Analyzing...';
+        });
+
+        // ===== PATH ANALYSIS =====
+        const pathForm = document.getElementById('path-form');
+        const pathInput = document.getElementById('path-input');
+        const pathSpinner = document.getElementById('path-spinner');
+
+        pathForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const path = pathInput.value.trim();
+
+            if (!path) {
+                alert('Please enter a path');
+                return;
+            }
+
+            pathSpinner.style.display = 'block';
+            window.location.href = `/analyze-path?path=${encodeURIComponent(path)}`;
+        });
+    </script>
+</body>
+
 </html>
